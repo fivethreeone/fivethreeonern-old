@@ -5,6 +5,7 @@
             [fivethreeonern.subs]))
 
 (def react-native (js/require "react-native"))
+(def sqllite (js/requre "react-native-sqlite-storage"))
 
 (def app-registry (.-AppRegistry react-native))
 (def text (r/adapt-react-class (.-Text react-native)))

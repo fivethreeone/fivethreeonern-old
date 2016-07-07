@@ -42,3 +42,8 @@ target/
 # Figwheel
 #
 figwheel_server.log
+
+# IntelliJ crap
+#
+*.iml
+/.idea
