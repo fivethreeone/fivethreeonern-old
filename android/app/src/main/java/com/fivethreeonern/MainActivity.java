@@ -7,6 +7,8 @@ import com.facebook.react.shell.MainReactPackage;
 import java.util.Arrays;
 import java.util.List;
 
+import org.pgsqlite.SQLitePluginPackage;
+
 public class MainActivity extends ReactActivity {
 
     /**
