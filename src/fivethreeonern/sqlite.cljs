@@ -5,3 +5,4 @@
 
 (defstate sqlite
   :start (.openDatabase node-module #js {:name "531" :createFromLocation 1} #(js/console.log "sql ok") #(js/console.log "sql error")))
+

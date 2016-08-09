@@ -1,6 +1,6 @@
 (ns fivethreeonern.migrations
   (:require [fivethreeonern.sqlingvo :refer [db]]
-            [sqlingvo.core :refer [select from insert values delete where]]))
+            [sqlingvo.core :refer [select from insert values delete where order-by]]))
 
 (def migrations [{:id 1
                   :up (fn [])
@@ -9,7 +9,9 @@
 (defn last-migration-id
   []
   (-> db
-      (select [:id] (from :migrations))
+      (select [:id]
+              (from :migrations)
+              (order-by '(:id)))
       ;; TODO: create transaction thing
       last
       :id))
@@ -31,7 +33,7 @@
 (defn migrate
   []
   (let [to-migrate-count (or (last-migration-id) 0)]
-    (doseq [{:keys [id up]} (drop migrations to-migrate-count)]
+    (doseq [{:keys [id up]} (drop to-migrate-count migrations)]
       (up)
       (insert-migration id))))
 
@@ -39,7 +41,7 @@
   ([id]
    (let [to-rollback-count (- (count migrations) id)]
      (when (> to-rollback-count 0)
-       (doseq [{:keys [down id]} (take (reverse migrations) to-rollback-count)]
+       (doseq [{:keys [down id]} (take to-rollback-count (reverse migrations))]
          (down)
          (delete-migration id)))))
   ([]
