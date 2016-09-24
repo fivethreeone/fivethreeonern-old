@@ -1,48 +1,34 @@
 (ns fivethreeonern.migrations
   (:require [fivethreeonern.sqlingvo :refer [db]]
-            [sqlingvo.core :refer [select from insert values delete where order-by]]))
+            [fivethreeonern.sqlite :refer [query]]
+            [sqlingvo.core :refer [select from insert values delete where order-by create-table]]))
 
-(def migrations [{:id 1
-                  :up (fn [])
-                  :down (fn [])}])
+(def migrations ["CREATE TABLE IF NOT EXISTS test_migrations (id INTEGER);"])
+
+(declare run-migrations)
 
 (defn last-migration-id
   []
-  (-> db
+  (-> @db
       (select [:id]
               (from :migrations)
               (order-by '(:id)))
-      ;; TODO: create transaction thing
-      last
-      :id))
+      (query (comp :id last))))
 
 (defn insert-migration
-  [id]
-  (-> db
+  [id rest-migrations]
+  (-> @db
       (insert :migrations [:id] (values [id]))
-      ;; TODO: create transaction thing
-      ))
+      (query (fn [_]
+               (if (empty? rest-migrations)
+                 (prn "Migrations succeeded!")
+                 (run-migrations rest-migrations))))))
 
-(defn delete-migration
-  [id]
-  (-> db
-      (delete :migrations (where '(= :id id)))
-      ;; TODO: create transaction thing
-      ))
+(defn run-migrations [[[id migration] & rest-migrations]]
+  (query migration (fn [_]
+                     (insert-migration id rest-migrations))))
 
 (defn migrate
-  []
+  [_]
   (let [to-migrate-count (or (last-migration-id) 0)]
-    (doseq [{:keys [id up]} (drop to-migrate-count migrations)]
-      (up)
-      (insert-migration id))))
-
-(defn rollback
-  ([id]
-   (let [to-rollback-count (- (count migrations) id)]
-     (when (> to-rollback-count 0)
-       (doseq [{:keys [down id]} (take to-rollback-count (reverse migrations))]
-         (down)
-         (delete-migration id)))))
-  ([]
-    (rollback 0)))
+    (run-migrations (map-indexed vector (drop to-migrate-count migrations)))))
