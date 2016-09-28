@@ -8,7 +8,6 @@
                            [org.clojure/core.async "0.2.385"]
                            [mount "0.1.10"]
                            [reagent "0.6.0-rc" :exclusions [cljsjs/react cljsjs/react-dom cljsjs/react-dom-server]]
-                           [sqlingvo "0.8.15"]
 [re-frame "0.7.0"]
 [prismatic/schema "1.0.4"]]
             :plugins [[lein-cljsbuild "1.1.1"]

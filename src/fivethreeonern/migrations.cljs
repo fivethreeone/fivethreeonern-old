@@ -1,7 +1,6 @@
 (ns fivethreeonern.migrations
-  (:require [fivethreeonern.sqlingvo :refer [db]]
-            [fivethreeonern.sqlite :refer [query]]
-            [sqlingvo.core :refer [select from insert values delete where order-by create-table]]))
+  (:require [fivethreeonern.sqlite :refer [query]]
+            [goog.string :as gstring]))
 
 (def migrations ["CREATE TABLE IF NOT EXISTS test_migrations (id INTEGER);"])
 
@@ -9,22 +8,18 @@
 
 (defn last-migration-id
   []
-  (-> @db
-      (select [:id]
-              (from :migrations)
-              (order-by '(:id)))
-      (query (comp :id last))))
+  (query "SELECT id FROM migrations ORDER BY id" (comp :id last)))
 
 (defn insert-migration
   [id rest-migrations]
-  (-> @db
-      (insert :migrations [:id] (values [id]))
-      (query (fn [_]
-               (if (empty? rest-migrations)
-                 (prn "Migrations succeeded!")
-                 (run-migrations rest-migrations))))))
+  (query (gstring/subs "INSERT INTO migrations (id) VALUES (%s);" id)
+         (fn [_]
+           (if (empty? rest-migrations)
+             (prn "Migrations succeeded!")
+             (run-migrations rest-migrations)))))
 
-(defn run-migrations [[[id migration] & rest-migrations]]
+(defn run-migrations
+  [[[id migration] & rest-migrations]]
   (query migration (fn [_]
                      (insert-migration id rest-migrations))))
 

@@ -1,6 +1,9 @@
 (ns fivethreeonern.android.core
-  (:require [reagent.core :as r :refer [atom]]
+  (:require [mount.core :as mount]
+            [reagent.core :as r :refer [atom]]
             [re-frame.core :refer [subscribe dispatch dispatch-sync]]
+            [fivethreeonern.migrations :refer [migrate]]
+            [fivethreeonern.sqlite :refer [query]]
             [fivethreeonern.handlers]
             [fivethreeonern.subs]))
 
@@ -18,6 +21,9 @@
 (defn alert [title]
   (.alert (.-Alert react-native) title))
 
+(defn run-migrations []
+  (query "CREATE TABLE IF NOT EXISTS migrations (id INTEGER);" migrate))
+
 (defn app-root []
   (let [greeting (subscribe [:get-greeting])]
     (fn []
@@ -26,9 +32,10 @@
        [image {:source logo-img
                :style  {:width 80 :height 80 :margin-bottom 30}}]
        [touchable-highlight {:style    {:background-color "#999" :padding 10 :border-radius 5}
-                             :on-press #(alert "HELLO!")}
-        [text {:style {:color "white" :text-align "center" :font-weight "bold"}} "press me"]]])))
+                             :on-press run-migrations}
+        [text {:style {:color "white" :text-align "center" :font-weight "bold"}} "MIGRATE ME"]]])))
 
 (defn init []
+  (mount/start)
   (dispatch-sync [:initialize-db])
   (.registerComponent app-registry "fivethreeonern" #(r/reactify-component app-root)))
